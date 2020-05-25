@@ -1185,7 +1185,7 @@ pre .javascript .function {
 }
 .links-of-author a::before,
 .links-of-author span.exturl::before {
-  background: #265475;
+  background: #cc5b62;
   border-radius: 50%;
   content: ' ';
   display: inline-block;
@@ -2294,18 +2294,25 @@ embed {
   white-space: nowrap;
 }
 body {
-  background: url("/images/chaka.jpg");
+  background: url("/images/hongkong.jpg");
   background-repeat: no-repeat;
   background-attachment: fixed;
   background-position: 50% 50%;
   background-size: cover;
+}
+.header-inner {
+  background: #fff;
+  opacity: 0.8;
+}
+.main-inner {
+  opacity: 0.9;
 }
 .sidebar {
   transition-duration: 0.4s;
   opacity: 0.8;
 }
 .posts-expand .post-title-link {
-  color: #222;
+  color: #fff;
 }
 .post-block {
   background: #fff;
