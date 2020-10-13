@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="简介记录的主要内容来源于《程序员的自我修养——链接、装载与库》是一部很好的结合操作系统理论和实际编译环境的书籍，帮助了解程序和进程加载的过程，其中主要包含静态链接、装载与动态链接，若想具体的修改编译过程和链接过程所涉及到的API的话，这本书是不够的，但就像书名一样，是程序员的自我修养。 第一章补一些之前不了解的内容 设备驱动设备驱动是对于硬件的一种抽象，例如磁盘的读取，有一个文件长度为8000字">
+<meta property="og:type" content="article">
+<meta property="og:title" content="静态链接与装载">
+<meta property="og:url" content="http://yoursite.com/2020/07/14/%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5%E4%B8%8E%E8%A3%85%E8%BD%BD/index.html">
+<meta property="og:site_name" content="AtomQu的博客">
+<meta property="og:description" content="简介记录的主要内容来源于《程序员的自我修养——链接、装载与库》是一部很好的结合操作系统理论和实际编译环境的书籍，帮助了解程序和进程加载的过程，其中主要包含静态链接、装载与动态链接，若想具体的修改编译过程和链接过程所涉及到的API的话，这本书是不够的，但就像书名一样，是程序员的自我修养。 第一章补一些之前不了解的内容 设备驱动设备驱动是对于硬件的一种抽象，例如磁盘的读取，有一个文件长度为8000字">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://yoursite.com/2020/07/14/%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5%E4%B8%8E%E8%A3%85%E8%BD%BD/1.jpg">
+<meta property="article:published_time" content="2020-07-14T10:00:08.000Z">
+<meta property="article:modified_time" content="2020-07-15T01:44:11.241Z">
+<meta property="article:author" content="Atom_Qu">
+<meta property="article:tag" content="Atom_Qu">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/2020/07/14/%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5%E4%B8%8E%E8%A3%85%E8%BD%BD/1.jpg">
+
+<link rel="canonical" href="http://yoursite.com/2020/07/14/%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5%E4%B8%8E%E8%A3%85%E8%BD%BD/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>静态链接与装载 | AtomQu的博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">AtomQu的博客</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">半路出家搬金砖</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/07/14/%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5%E4%B8%8E%E8%A3%85%E8%BD%BD/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Atom_Qu">
+      <meta itemprop="description" content="北京航空航天大学 | 计算机科学与技术 | CG">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="AtomQu的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          静态链接与装载
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-07-14 18:00:08" itemprop="dateCreated datePublished" datetime="2020-07-14T18:00:08+08:00">2020-07-14</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-07-15 09:44:11" itemprop="dateModified" datetime="2020-07-15T09:44:11+08:00">2020-07-15</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><font face="黑体" size="4"></font></p>
+<h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p><font face="黑体" size="4">记录的主要内容来源于《程序员的自我修养——链接、装载与库》是一部很好的结合操作系统理论和实际编译环境的书籍，帮助了解程序和进程加载的过程，其中主要包含静态链接、装载与动态链接，若想具体的修改编译过程和链接过程所涉及到的API的话，这本书是不够的，但就像书名一样，是程序员的自我修养。</font></p>
+<h1 id="第一章"><a href="#第一章" class="headerlink" title="第一章"></a>第一章</h1><p><font face="黑体" size="4">补一些之前不了解的内容</font></p>
+<h3 id="设备驱动"><a href="#设备驱动" class="headerlink" title="设备驱动"></a>设备驱动</h3><p><font face="黑体" size="4">设备驱动是对于硬件的一种抽象，例如磁盘的读取，有一个文件长度为8000字节，前4096字节存储在1000-1007扇区，剩下存在2000-2007扇区，操作系统应该系统调用read向I/O发送想要读取的LBA地址，并将读入的结果放入内存…以上这个过程都会被设备驱动给隐藏掉。</font></p>
+<h3 id="虚拟地址"><a href="#虚拟地址" class="headerlink" title="虚拟地址"></a>虚拟地址</h3><p><font face="黑体" size="4">虚拟地址可以帮助解决如下的问题<br>1 地址空间不隔离<br>2 内存使用率低<br>3 程序运行的地址不确定（重定位不固定）</font><br><br><font face="黑体" size="4">页映射或者虚拟存储的实现需要依靠MMU(Memory Management Unit)，虚拟地址经过MMU可得到物理地址。<br></font></p>
+<h3 id="线程基础"><a href="#线程基础" class="headerlink" title="线程基础"></a>线程基础</h3><p><font face="黑体" size="4">一个标准的线程由线程ID、当前指令指针PC，寄存器集合和堆栈组成，一个进程由多个线程组成，各个线程之间共享程序的内存空间。</font></p>
+<p>线程的访问权限</p>
+<table>
+<thead>
+<tr>
+<th align="left">线程私有</th>
+<th align="left">线程之间共享（进程所有）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">-局部变量<br>-函数的参数<br>-TLS数据</td>
+<td align="left">-全局变量<br>-堆上的数据<br>-函数里的静态变量<br>-程序代码<br>-打开的文件</td>
+</tr>
+</tbody></table>
+<p>过度优化：<br>举例一个并行编写但因为编译过程优化而造成的错误。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">x &#x3D; y &#x3D; 0;</span><br><span class="line">Thread 1   Thread 2</span><br><span class="line">x &#x3D; 1;     y &#x3D; 1;  </span><br><span class="line">r1 &#x3D; y;    r2 &#x3D; x;</span><br></pre></td></tr></table></figure>
+<p>r1和r2应该至少有一个为0，但有可能发生r1和r2都为0的情况，因为动态调度后会改变指令执行的次序，可以采用volatile关键字阻止过度优化（1）阻止编译器为了提高速度将变量缓存到寄存器内而不写回（2）阻止编译器调整指令顺序。<br></p>
+<h2 id="编译过程"><a href="#编译过程" class="headerlink" title="编译过程"></a>编译过程</h2><p><font face="黑体" size="4">GCC编译Hello World的过程，预处理-&gt;编译-&gt;汇编-&gt;链接<br><img src="/2020/07/14/%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5%E4%B8%8E%E8%A3%85%E8%BD%BD/1.jpg" alt="GCC编译Hello World的过程，预处理-&gt;编译-&gt;汇编-&gt;链接"><br>在C语言中，通常以.c文件保存变量和函数，这就像一个模块一样，但若干个模块需要相互之间的引用，相当于模块与模块之间进行通信，而通信方式有两种（1）函数调用（2）模块间变量的访问。但要能实现的话，需要知道函数和变量的地址，这就产生了一个中间过程：链接。<br><br>静态链接就是处理以上的过程，所以链接的主要内容是：<br>1 地址和空间分配<br>2 符号决议<br>3 重定位等<br></font></p>
+<h1 id="第二章-目标文件"><a href="#第二章-目标文件" class="headerlink" title="第二章 目标文件"></a>第二章 目标文件</h1><p><font face="黑体" size="4">编译器编译源码后生成的文件为目标文件，未经过链接，此章是了解其结构。<br><br><br>可执行文件格式在Win下是PE，在Linux下则为ELF，产生的中间文件分别为.obj和.o。<br>动态链接库DLL（Win—.dll  /  Linux—.so）<br>静态链接库（Win—.lib  /  Linux—.a）都是按照可执行文件格式存储。</font></p>
+<p>目标文件将信息按照不同属性以“节”的形式进行存储，也可以称为“段”。例如代码段.code/.txt放入需要执行的代码，数据段.data中放入数据。所以为了管理这些信息，需要在可执行的文件头设置一个段表，描述文件的属性，是否可执行、静态还是动态链接、入口地址等，还包含一个段表，包含各段的偏移信息和属性。</p>
+<p>一个简单的.c文件编译后形成机器代码，保存在.text段，全局变量和局部静态变量保存在.data段，未初始化的变量放入.bss段（为未初始化的全局变量和局部静态变量预留位置）。<br></p>
+<h2 id="举例"><a href="#举例" class="headerlink" title="举例"></a>举例</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">int printf(const char* format,...);</span><br><span class="line">int global_init_var &#x3D; 84;</span><br><span class="line">int global_uninit_var;</span><br><span class="line"></span><br><span class="line">void fun1(int i)</span><br><span class="line">&#123;</span><br><span class="line">	printf(&quot;%d\n&quot;,i);</span><br><span class="line">&#125;</span><br><span class="line">int main(void)</span><br><span class="line">&#123;</span><br><span class="line">	static int static_var &#x3D; 85;</span><br><span class="line">    static int static_var2;</span><br><span class="line">	int a &#x3D; 1;</span><br><span class="line">	int b;</span><br><span class="line"></span><br><span class="line">    fun1(static_var + static_var2 + a + b);</span><br><span class="line"></span><br><span class="line">	return a;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+<div>
+  
+    <div>
+    
+        <div style="text-align:center;color: #ccc;font-size:14px;">-------------End<i class="fa fa-heart"></i>Bye-------------</div>
+    
+</div>
+
+  
+</div>
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/05/26/%E3%80%8A%E6%B7%B1%E5%BA%A6%E6%8E%A2%E7%B4%A2C-%E5%AF%B9%E8%B1%A1%E6%A8%A1%E5%9E%8B%E3%80%8B%E7%AC%AC%E4%B8%80%E7%AB%A0/" rel="prev" title="《深度探索C++对象模型》第一章">
+      <i class="fa fa-chevron-left"></i> 《深度探索C++对象模型》第一章
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/07/30/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%EF%BC%9A%E7%BB%93%E6%9E%84%E5%9E%8B%E6%A8%A1%E5%BC%8F/" rel="next" title="设计模式：结构型模式">
+      设计模式：结构型模式 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#简介"><span class="nav-number">1.</span> <span class="nav-text">简介</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#第一章"><span class="nav-number"></span> <span class="nav-text">第一章</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#设备驱动"><span class="nav-number">0.1.</span> <span class="nav-text">设备驱动</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#虚拟地址"><span class="nav-number">0.2.</span> <span class="nav-text">虚拟地址</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#线程基础"><span class="nav-number">0.3.</span> <span class="nav-text">线程基础</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#编译过程"><span class="nav-number">1.</span> <span class="nav-text">编译过程</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#第二章-目标文件"><span class="nav-number"></span> <span class="nav-text">第二章 目标文件</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#举例"><span class="nav-number">1.</span> <span class="nav-text">举例</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Atom_Qu"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">Atom_Qu</p>
+  <div class="site-description" itemprop="description">北京航空航天大学 | 计算机科学与技术 | CG</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">5</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+  </nav>
+</div>
+  <div class="cc-license motion-element" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Atom_Qu</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+</body>
+</html>

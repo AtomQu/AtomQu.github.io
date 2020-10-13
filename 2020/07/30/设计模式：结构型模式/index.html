@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="ADAPTER适配器（包装器Wrapper）目的 主要实现接口不兼容问题：新的方法需要结合两个接口。  例如：绘图编辑器，图形对象抽象类为Shape，然后不同的图形成为其子类，例如LineShape类为直线...但牵扯到文字显示，TextShape子类确难实现，希望能勾让TextShape复用已经有的TextView类进行显示和编辑正文，但两者的抽象类有区别，所以需要进行处理。  实现方法：">
+<meta property="og:type" content="article">
+<meta property="og:title" content="设计模式：结构型模式">
+<meta property="og:url" content="http://yoursite.com/2020/07/30/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%EF%BC%9A%E7%BB%93%E6%9E%84%E5%9E%8B%E6%A8%A1%E5%BC%8F/index.html">
+<meta property="og:site_name" content="AtomQu的博客">
+<meta property="og:description" content="ADAPTER适配器（包装器Wrapper）目的 主要实现接口不兼容问题：新的方法需要结合两个接口。  例如：绘图编辑器，图形对象抽象类为Shape，然后不同的图形成为其子类，例如LineShape类为直线...但牵扯到文字显示，TextShape子类确难实现，希望能勾让TextShape复用已经有的TextView类进行显示和编辑正文，但两者的抽象类有区别，所以需要进行处理。  实现方法：">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://yoursite.com/2020/07/30/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%EF%BC%9A%E7%BB%93%E6%9E%84%E5%9E%8B%E6%A8%A1%E5%BC%8F/1.jpg">
+<meta property="og:image" content="http://yoursite.com/2020/07/30/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%EF%BC%9A%E7%BB%93%E6%9E%84%E5%9E%8B%E6%A8%A1%E5%BC%8F/2.jpg">
+<meta property="og:image" content="http://yoursite.com/2020/07/30/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%EF%BC%9A%E7%BB%93%E6%9E%84%E5%9E%8B%E6%A8%A1%E5%BC%8F/3.jpg">
+<meta property="og:image" content="http://yoursite.com/2020/07/30/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%EF%BC%9A%E7%BB%93%E6%9E%84%E5%9E%8B%E6%A8%A1%E5%BC%8F/4.jpg">
+<meta property="og:image" content="http://yoursite.com/2020/07/30/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%EF%BC%9A%E7%BB%93%E6%9E%84%E5%9E%8B%E6%A8%A1%E5%BC%8F/5.jpg">
+<meta property="og:image" content="http://yoursite.com/2020/07/30/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%EF%BC%9A%E7%BB%93%E6%9E%84%E5%9E%8B%E6%A8%A1%E5%BC%8F/6.jpg">
+<meta property="article:published_time" content="2020-07-30T00:30:11.000Z">
+<meta property="article:modified_time" content="2020-07-31T05:17:41.851Z">
+<meta property="article:author" content="Atom_Qu">
+<meta property="article:tag" content="Atom_Qu">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/2020/07/30/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%EF%BC%9A%E7%BB%93%E6%9E%84%E5%9E%8B%E6%A8%A1%E5%BC%8F/1.jpg">
+
+<link rel="canonical" href="http://yoursite.com/2020/07/30/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%EF%BC%9A%E7%BB%93%E6%9E%84%E5%9E%8B%E6%A8%A1%E5%BC%8F/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>设计模式：结构型模式 | AtomQu的博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">AtomQu的博客</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">半路出家搬金砖</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/07/30/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%EF%BC%9A%E7%BB%93%E6%9E%84%E5%9E%8B%E6%A8%A1%E5%BC%8F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Atom_Qu">
+      <meta itemprop="description" content="北京航空航天大学 | 计算机科学与技术 | CG">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="AtomQu的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          设计模式：结构型模式
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-07-30 08:30:11" itemprop="dateCreated datePublished" datetime="2020-07-30T08:30:11+08:00">2020-07-30</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-07-31 13:17:41" itemprop="dateModified" datetime="2020-07-31T13:17:41+08:00">2020-07-31</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><font face="宋体" size="4"></font></p>
+<h1 id="ADAPTER适配器（包装器Wrapper）"><a href="#ADAPTER适配器（包装器Wrapper）" class="headerlink" title="ADAPTER适配器（包装器Wrapper）"></a>ADAPTER适配器（包装器Wrapper）</h1><h2 id="目的"><a href="#目的" class="headerlink" title="目的"></a>目的</h2><font face="宋体" size="4">
+主要实现接口不兼容问题：新的方法需要结合两个接口。
+<br>
+例如：绘图编辑器，图形对象抽象类为Shape，然后不同的图形成为其子类，例如LineShape类为直线...但牵扯到文字显示，TextShape子类确难实现，希望能勾让TextShape复用已经有的TextView类进行显示和编辑正文，但两者的抽象类有区别，所以需要进行处理。
+<br><br>
+实现方法：
+
+<p>1 类继承，TextShape类继承TextView和Shape类<br>2 使TextShape拥有TextView的指针，从而能够调用接口。</p>
+<p>称TextShape为适配器Adapter。<br></p></font><p></p>
+<p><img src="/2020/07/30/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%EF%BC%9A%E7%BB%93%E6%9E%84%E5%9E%8B%E6%A8%A1%E5%BC%8F/1.jpg" alt="Adapter举例"></p>
+<h2 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h2><font face="宋体" size="4">
+该方案的主体框架涉及到
+
+<p>1 Target：定义Client使用特定的接口。<br>2 Client：调用Adapter<br>3 Adaptee：该接口需要被适配<br>4 Adapter：将Adaptee和Target进行适配<br></p></font><p></p>
+<p><img src="/2020/07/30/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%EF%BC%9A%E7%BB%93%E6%9E%84%E5%9E%8B%E6%A8%A1%E5%BC%8F/2.jpg" alt></p>
+<font face="宋体" size="4">
+类适配和对象适配的区别我认为在于，**Adaptee的数量和复杂程度**，对象适配较为简单和轻量，但Adapter若要改进Adaptee的话，还是需要对象适配，
+
+<p><strong>Adapter的工作量取决于Target接口和Adaptee接口的相似程度。</strong></p>
+<p><strong>可插入的Adapter——这里我感觉没理解书中的意思，从代码和结果上来看使实现和调用分离，利用了下个设计模式的内容，姑且这么理解吧：Adapter和Target要定义好基本接口规范格式，然后采用将实现与调用分离方式来实现，这就变成可插入的了。</strong></p>
+<p>双向适配器—继承多个类？？没啥特殊的意思吧。。</p>
+</font>
+
+<h2 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h2><font face="宋体" size="4">
+
+<p>1 C++实现适配器，需要注意的是将Target用public继承，Adaptee则用private继承，可以避免暴露Adaptee。<br>2 可插入适配器的窄接口：1）抽象操作2）代理对象，实现和调用分离。</p></font><br><img src="/2020/07/30/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%EF%BC%9A%E7%BB%93%E6%9E%84%E5%9E%8B%E6%A8%A1%E5%BC%8F/3.jpg" alt><br><font face="宋体" size="4"><br>解释：此处将具体实现或者需要调用的通用接口放在delegate中，然后用DirectoryBrowser实现多态化，能够达到替换的效果，这里面只需要让TreeDispaly有一个基类的指针TreeAccessorDelegate*就可以。<br></font><p></p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p><font face="宋体" size="4"><strong>该设计模式比较容易理解，主要考虑到的一点，可复用性，如果要根据新的类进行接口的适配或者类的适配，必定需要用到对应的接口，如果复杂或者数量不多，尽量用对象适配，若较为简单，需要对Adaptee接口进行重载，则要用类适配，平时用的肯定也很多，该方法提高复用性，并不用对原来的类进行修改，只需要重载重新写就可以了，达到糅合的目的</strong></font></p>
+<br>
+<br>
+
+<h1 id="Bridge-桥接"><a href="#Bridge-桥接" class="headerlink" title="Bridge(桥接)"></a>Bridge(桥接)</h1><h2 id="目的-1"><a href="#目的-1" class="headerlink" title="目的"></a>目的</h2><p><font face="宋体" size="4">抽象部分与实现部分分离。通常调用的方法都是比较固定的套路，但是实现的方式需要根据类对象进行变化，不同的类对象实现接口的方法不一样，所以需要通过将两者分离，可以实现独立出去的部分进行修改、扩充和重用。<br><br><br>例如：实现一个用户界面工具箱，有Windows基类，可以复用在X Windows System和PM系统中，还有进一步实现的Icon功能，也需要在不同的系统中进行复用，所以就会产生下图的画面。<br></font><br><img src="/2020/07/30/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%EF%BC%9A%E7%BB%93%E6%9E%84%E5%9E%8B%E6%A8%A1%E5%BC%8F/4.jpg" alt><br><font face="宋体" size="4"><br>该方法的坏处在于：1）每次创建一个窗口时，必须要实例化一个具体的类（采用Bridge后该指针为实现的基类，只需维护该指针就好），然后该类有特定的实现部分。2）如此的继承方式过于冗余。每一次生成一个功能类时都需要分别拓展出2个类，如此的类层次结构被称为<strong>“嵌套的普化”</strong>。<br><br>可以发现在创建窗口的时候不应该涉及到具体的实现部分，窗口的实现依赖于应用运行的平台，但创建窗口时就不需要依赖于特定的平台。<br><br>采用Bridge设计模式的核心在于：实现和调用的分离，换而言之创建窗口的时候，只是直接调用，然后不需要去思考具体平台实现的差异。下图为用Bridge设计模式实现的结果。<br></font><br><img src="/2020/07/30/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%EF%BC%9A%E7%BB%93%E6%9E%84%E5%9E%8B%E6%A8%A1%E5%BC%8F/5.jpg" alt></p>
+<p><font face="宋体" size="4">可以发现创建窗口只需要基类指针Windowimp*就可以在两者之间建立桥梁。</font></p>
+<h2 id="分析-1"><a href="#分析-1" class="headerlink" title="分析"></a>分析</h2><p><img src="/2020/07/30/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%EF%BC%9A%E7%BB%93%E6%9E%84%E5%9E%8B%E6%A8%A1%E5%BC%8F/6.jpg" alt><br><font face="宋体" size="4"><br>1 Abrstraction:定义基类，维护指向Implementor的指针。<br>2 RefinedAbstraction:具体功能的创建。<br>3 Implementor:实现部分的基类。<br>4 ConcreteImplementor：根据不同的环境定义具体的功能实现方法。<br></font></p>
+<p><font face="宋体" size="4"><strong>优缺点：</strong></font></p>
+<p>1 抽象类中实现的方式可以进行灵活的整合和改变。<br>2 实现部分如果有删减后，不需要重新编译调用部分。<br>3 Abstraction和Implementor两部分的扩充性都很好。<br>4 实现部分是透明的。<br></p>
+<h2 id="实现-1"><a href="#实现-1" class="headerlink" title="实现"></a>实现</h2><font face="宋体" size="4">
+1 若仅有一个Implementor则无需进行分离，在C++中实现类的文件可以不必给出，仅给头文件或者动态库就可以。
+2 其实采用Bridge设计模式后，更为重要的是如何让指针的类能够被识别，可以采用工厂模式的方法，在新建的时候或者实现的时候就进行动态的设定，从而达到目的。又或者可以通过对不同的实现方式进行编号来分类选择。若采用该方法的化，函数创建的缺省还是很重要的。
+
+</font>
+
+
+<h2 id="总结-1"><a href="#总结-1" class="headerlink" title="总结"></a>总结</h2><font face="宋体" size="4">
+Bridge设计模式的主要核心思想还是在于调用和实现的分离，提高了灵活性，但需要对指针的匹配进行工厂模式等特殊处理，才能达到多种实现方法的正确调用。
+</font>
+    </div>
+
+    
+    
+    
+<div>
+  
+    <div>
+    
+        <div style="text-align:center;color: #ccc;font-size:14px;">-------------End<i class="fa fa-heart"></i>Bye-------------</div>
+    
+</div>
+
+  
+</div>
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/07/14/%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5%E4%B8%8E%E8%A3%85%E8%BD%BD/" rel="prev" title="静态链接与装载">
+      <i class="fa fa-chevron-left"></i> 静态链接与装载
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/08/01/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E2%80%94%E2%80%94%E8%A1%8C%E4%B8%BA%E6%A8%A1%E5%BC%8F/" rel="next" title="设计模式——行为模式">
+      设计模式——行为模式 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#ADAPTER适配器（包装器Wrapper）"><span class="nav-number">1.</span> <span class="nav-text">ADAPTER适配器（包装器Wrapper）</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#目的"><span class="nav-number">1.1.</span> <span class="nav-text">目的</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#分析"><span class="nav-number">1.2.</span> <span class="nav-text">分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#实现"><span class="nav-number">1.3.</span> <span class="nav-text">实现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">1.4.</span> <span class="nav-text">总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Bridge-桥接"><span class="nav-number">2.</span> <span class="nav-text">Bridge(桥接)</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#目的-1"><span class="nav-number">2.1.</span> <span class="nav-text">目的</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#分析-1"><span class="nav-number">2.2.</span> <span class="nav-text">分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#实现-1"><span class="nav-number">2.3.</span> <span class="nav-text">实现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结-1"><span class="nav-number">2.4.</span> <span class="nav-text">总结</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Atom_Qu"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">Atom_Qu</p>
+  <div class="site-description" itemprop="description">北京航空航天大学 | 计算机科学与技术 | CG</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">5</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+  </nav>
+</div>
+  <div class="cc-license motion-element" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Atom_Qu</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+</body>
+</html>

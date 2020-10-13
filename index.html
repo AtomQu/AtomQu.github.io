@@ -149,6 +149,304 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/08/01/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E2%80%94%E2%80%94%E8%A1%8C%E4%B8%BA%E6%A8%A1%E5%BC%8F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Atom_Qu">
+      <meta itemprop="description" content="北京航空航天大学 | 计算机科学与技术 | CG">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="AtomQu的博客">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/08/01/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E2%80%94%E2%80%94%E8%A1%8C%E4%B8%BA%E6%A8%A1%E5%BC%8F/" class="post-title-link" itemprop="url">设计模式——行为模式</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2020-08-01 14:09:04 / 修改时间：15:07:38" itemprop="dateCreated datePublished" datetime="2020-08-01T14:09:04+08:00">2020-08-01</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p><font face="宋体" size="4"></font></p>
+<h1 id="ITERATOR-迭代器-——对象行为模式"><a href="#ITERATOR-迭代器-——对象行为模式" class="headerlink" title="ITERATOR(迭代器)——对象行为模式"></a>ITERATOR(迭代器)——对象行为模式</h1><h2 id="目的"><a href="#目的" class="headerlink" title="目的"></a>目的</h2><font face="宋体" size="4">
+迭代器的作用其实是对于一个顺序类的套壳，可以隐藏对象的内部表示，使用迭代器实现封装，可以根据需要自由的实现接口的逻辑。
+
+<p>聚合对象以列表为例，Client需要访问列表聚合类中的元素，但又不要暴露其内部结构，但具体的访问操作不应该暴露在列表的对象中，而是进行一层封装，利用资源和开放的接口进一步实现，实现接口的统一和保护。</p>
+<p>并且聚合类的性质可以改变，例如希望列表被进化为顺序访问列表、逆序访问列表、有条件访问列表等…<br></p></font><p></p>
+<h2 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h2><p><img src="/2020/08/01/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E2%80%94%E2%80%94%E8%A1%8C%E4%B8%BA%E6%A8%A1%E5%BC%8F/1.jpg" alt></p>
+<font face="宋体" size="4">
+
+<p>1 Iterator:抽象类定义了Iterator都需要实现的功能。<br>2 ConcreteIterator:Client根据具体的ConcreteIterator访问ConcreteAggregate的元素，所以该类中肯定包含实例化的指针或者对象。<br>3 Aggregate:抽象类定义了聚合类都需要实现的功能。<br>4 ConcreteAggregate：具体的聚合类，用来存储数据，提供必要的接口给ConcreteIterator使用。</p>
+</font>
+
+<font face="宋体" size="4">
+
+<p>作用：<br>1 支持以不同的方式遍历同一个聚合，前中遍历都可以通过设定不同的迭代器来得到效果。<br>2 迭代器简化了聚合的接口，聚合类只需要提供基本的窗口，然后迭代器去调用这些资源，帮助实现。<br>3 在同一个聚合上可以有多个遍历（…这算啥好处…）</p>
+</font>
+
+<h2 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h2><font face="宋体" size="4">
+实现的过程中需要考虑多个方面
+
+<ul>
+<li>谁控制迭代：Client实现迭代的话，就属于外部迭代器，Iterator内部实现迭代则为内部迭代器，说明白点就是，for()循环遍历数据是Client做还是Iterator自己做，前者做的话意味着Iterator没有对应的Traverse的接口，后者则定义遍历接口，然后进行内部的迭代。</li>
+<li>迭代器的健壮程度：对数据的操作会改变数据，会导致2次访问同一个元素或者遗漏某个元素，其实主要目的就是保证插入和删除操作不会干扰遍历。</li>
+<li>C++中使用多态的迭代器：若想要采用多态提高开发效率的话，需要结合Factory Method动态分配迭代器的对象，才能实现正确的调用。</li>
+<li>与Composite模式结合进行遍历类的时候，多采用内部迭代器，根据不同的聚合类种类定义遍历的次序和内容。</li></ul></font>
+
+
+
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><font face="宋体" size="4">
+Iterator在我的理解中更倾向于是对聚合类的封装和Delegate，也实现了资源和实现方式的分离。
+</font>
+      
+    </div>
+
+    
+    
+    
+<div>
+  
+</div>
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/07/30/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%EF%BC%9A%E7%BB%93%E6%9E%84%E5%9E%8B%E6%A8%A1%E5%BC%8F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Atom_Qu">
+      <meta itemprop="description" content="北京航空航天大学 | 计算机科学与技术 | CG">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="AtomQu的博客">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/07/30/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%EF%BC%9A%E7%BB%93%E6%9E%84%E5%9E%8B%E6%A8%A1%E5%BC%8F/" class="post-title-link" itemprop="url">设计模式：结构型模式</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-07-30 08:30:11" itemprop="dateCreated datePublished" datetime="2020-07-30T08:30:11+08:00">2020-07-30</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-07-31 13:17:41" itemprop="dateModified" datetime="2020-07-31T13:17:41+08:00">2020-07-31</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p><font face="宋体" size="4"></font></p>
+<h1 id="ADAPTER适配器（包装器Wrapper）"><a href="#ADAPTER适配器（包装器Wrapper）" class="headerlink" title="ADAPTER适配器（包装器Wrapper）"></a>ADAPTER适配器（包装器Wrapper）</h1><h2 id="目的"><a href="#目的" class="headerlink" title="目的"></a>目的</h2><font face="宋体" size="4">
+主要实现接口不兼容问题：新的方法需要结合两个接口。
+<br>
+例如：绘图编辑器，图形对象抽象类为Shape，然后不同的图形成为其子类，例如LineShape类为直线...但牵扯到文字显示，TextShape子类确难实现，希望能勾让TextShape复用已经有的TextView类进行显示和编辑正文，但两者的抽象类有区别，所以需要进行处理。
+<br><br>
+实现方法：
+
+<p>1 类继承，TextShape类继承TextView和Shape类<br>2 使TextShape拥有TextView的指针，从而能够调用接口。</p>
+<p>称TextShape为适配器Adapter。<br></p></font><p></p>
+<p><img src="/2020/07/30/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%EF%BC%9A%E7%BB%93%E6%9E%84%E5%9E%8B%E6%A8%A1%E5%BC%8F/1.jpg" alt="Adapter举例"></p>
+<h2 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h2><font face="宋体" size="4">
+该方案的主体框架涉及到
+
+<p>1 Target：定义Client使用特定的接口。<br>2 Client：调用Adapter<br>3 Adaptee：该接口需要被适配<br>4 Adapter：将Adaptee和Target进行适配<br></p></font><p></p>
+<p><img src="/2020/07/30/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%EF%BC%9A%E7%BB%93%E6%9E%84%E5%9E%8B%E6%A8%A1%E5%BC%8F/2.jpg" alt></p>
+<font face="宋体" size="4">
+类适配和对象适配的区别我认为在于，**Adaptee的数量和复杂程度**，对象适配较为简单和轻量，但Adapter若要改进Adaptee的话，还是需要对象适配，
+
+<p><strong>Adapter的工作量取决于Target接口和Adaptee接口的相似程度。</strong></p>
+<p><strong>可插入的Adapter——这里我感觉没理解书中的意思，从代码和结果上来看使实现和调用分离，利用了下个设计模式的内容，姑且这么理解吧：Adapter和Target要定义好基本接口规范格式，然后采用将实现与调用分离方式来实现，这就变成可插入的了。</strong></p>
+<p>双向适配器—继承多个类？？没啥特殊的意思吧。。</p>
+</font>
+
+<h2 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h2><font face="宋体" size="4">
+
+<p>1 C++实现适配器，需要注意的是将Target用public继承，Adaptee则用private继承，可以避免暴露Adaptee。<br>2 可插入适配器的窄接口：1）抽象操作2）代理对象，实现和调用分离。</p></font><br><img src="/2020/07/30/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%EF%BC%9A%E7%BB%93%E6%9E%84%E5%9E%8B%E6%A8%A1%E5%BC%8F/3.jpg" alt><br><font face="宋体" size="4"><br>解释：此处将具体实现或者需要调用的通用接口放在delegate中，然后用DirectoryBrowser实现多态化，能够达到替换的效果，这里面只需要让TreeDispaly有一个基类的指针TreeAccessorDelegate*就可以。<br></font><p></p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p><font face="宋体" size="4"><strong>该设计模式比较容易理解，主要考虑到的一点，可复用性，如果要根据新的类进行接口的适配或者类的适配，必定需要用到对应的接口，如果复杂或者数量不多，尽量用对象适配，若较为简单，需要对Adaptee接口进行重载，则要用类适配，平时用的肯定也很多，该方法提高复用性，并不用对原来的类进行修改，只需要重载重新写就可以了，达到糅合的目的</strong></font></p>
+<br>
+<br>
+
+<h1 id="Bridge-桥接"><a href="#Bridge-桥接" class="headerlink" title="Bridge(桥接)"></a>Bridge(桥接)</h1><h2 id="目的-1"><a href="#目的-1" class="headerlink" title="目的"></a>目的</h2><p><font face="宋体" size="4">抽象部分与实现部分分离。通常调用的方法都是比较固定的套路，但是实现的方式需要根据类对象进行变化，不同的类对象实现接口的方法不一样，所以需要通过将两者分离，可以实现独立出去的部分进行修改、扩充和重用。<br><br><br>例如：实现一个用户界面工具箱，有Windows基类，可以复用在X Windows System和PM系统中，还有进一步实现的Icon功能，也需要在不同的系统中进行复用，所以就会产生下图的画面。<br></font><br><img src="/2020/07/30/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%EF%BC%9A%E7%BB%93%E6%9E%84%E5%9E%8B%E6%A8%A1%E5%BC%8F/4.jpg" alt><br><font face="宋体" size="4"><br>该方法的坏处在于：1）每次创建一个窗口时，必须要实例化一个具体的类（采用Bridge后该指针为实现的基类，只需维护该指针就好），然后该类有特定的实现部分。2）如此的继承方式过于冗余。每一次生成一个功能类时都需要分别拓展出2个类，如此的类层次结构被称为<strong>“嵌套的普化”</strong>。<br><br>可以发现在创建窗口的时候不应该涉及到具体的实现部分，窗口的实现依赖于应用运行的平台，但创建窗口时就不需要依赖于特定的平台。<br><br>采用Bridge设计模式的核心在于：实现和调用的分离，换而言之创建窗口的时候，只是直接调用，然后不需要去思考具体平台实现的差异。下图为用Bridge设计模式实现的结果。<br></font><br><img src="/2020/07/30/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%EF%BC%9A%E7%BB%93%E6%9E%84%E5%9E%8B%E6%A8%A1%E5%BC%8F/5.jpg" alt></p>
+<p><font face="宋体" size="4">可以发现创建窗口只需要基类指针Windowimp*就可以在两者之间建立桥梁。</font></p>
+<h2 id="分析-1"><a href="#分析-1" class="headerlink" title="分析"></a>分析</h2><p><img src="/2020/07/30/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%EF%BC%9A%E7%BB%93%E6%9E%84%E5%9E%8B%E6%A8%A1%E5%BC%8F/6.jpg" alt><br><font face="宋体" size="4"><br>1 Abrstraction:定义基类，维护指向Implementor的指针。<br>2 RefinedAbstraction:具体功能的创建。<br>3 Implementor:实现部分的基类。<br>4 ConcreteImplementor：根据不同的环境定义具体的功能实现方法。<br></font></p>
+<p><font face="宋体" size="4"><strong>优缺点：</strong></font></p>
+<p>1 抽象类中实现的方式可以进行灵活的整合和改变。<br>2 实现部分如果有删减后，不需要重新编译调用部分。<br>3 Abstraction和Implementor两部分的扩充性都很好。<br>4 实现部分是透明的。<br></p>
+<h2 id="实现-1"><a href="#实现-1" class="headerlink" title="实现"></a>实现</h2><font face="宋体" size="4">
+1 若仅有一个Implementor则无需进行分离，在C++中实现类的文件可以不必给出，仅给头文件或者动态库就可以。
+2 其实采用Bridge设计模式后，更为重要的是如何让指针的类能够被识别，可以采用工厂模式的方法，在新建的时候或者实现的时候就进行动态的设定，从而达到目的。又或者可以通过对不同的实现方式进行编号来分类选择。若采用该方法的化，函数创建的缺省还是很重要的。
+
+</font>
+
+
+<h2 id="总结-1"><a href="#总结-1" class="headerlink" title="总结"></a>总结</h2><font face="宋体" size="4">
+Bridge设计模式的主要核心思想还是在于调用和实现的分离，提高了灵活性，但需要对指针的匹配进行工厂模式等特殊处理，才能达到多种实现方法的正确调用。
+</font>
+      
+    </div>
+
+    
+    
+    
+<div>
+  
+</div>
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/07/14/%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5%E4%B8%8E%E8%A3%85%E8%BD%BD/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Atom_Qu">
+      <meta itemprop="description" content="北京航空航天大学 | 计算机科学与技术 | CG">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="AtomQu的博客">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/07/14/%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5%E4%B8%8E%E8%A3%85%E8%BD%BD/" class="post-title-link" itemprop="url">静态链接与装载</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-07-14 18:00:08" itemprop="dateCreated datePublished" datetime="2020-07-14T18:00:08+08:00">2020-07-14</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-07-15 09:44:11" itemprop="dateModified" datetime="2020-07-15T09:44:11+08:00">2020-07-15</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p><font face="黑体" size="4"></font></p>
+<h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p><font face="黑体" size="4">记录的主要内容来源于《程序员的自我修养——链接、装载与库》是一部很好的结合操作系统理论和实际编译环境的书籍，帮助了解程序和进程加载的过程，其中主要包含静态链接、装载与动态链接，若想具体的修改编译过程和链接过程所涉及到的API的话，这本书是不够的，但就像书名一样，是程序员的自我修养。</font></p>
+<h1 id="第一章"><a href="#第一章" class="headerlink" title="第一章"></a>第一章</h1><p><font face="黑体" size="4">补一些之前不了解的内容</font></p>
+<h3 id="设备驱动"><a href="#设备驱动" class="headerlink" title="设备驱动"></a>设备驱动</h3><p><font face="黑体" size="4">设备驱动是对于硬件的一种抽象，例如磁盘的读取，有一个文件长度为8000字节，前4096字节存储在1000-1007扇区，剩下存在2000-2007扇区，操作系统应该系统调用read向I/O发送想要读取的LBA地址，并将读入的结果放入内存…以上这个过程都会被设备驱动给隐藏掉。</font></p>
+<h3 id="虚拟地址"><a href="#虚拟地址" class="headerlink" title="虚拟地址"></a>虚拟地址</h3><p><font face="黑体" size="4">虚拟地址可以帮助解决如下的问题<br>1 地址空间不隔离<br>2 内存使用率低<br>3 程序运行的地址不确定（重定位不固定）</font><br><br><font face="黑体" size="4">页映射或者虚拟存储的实现需要依靠MMU(Memory Management Unit)，虚拟地址经过MMU可得到物理地址。<br></font></p>
+<h3 id="线程基础"><a href="#线程基础" class="headerlink" title="线程基础"></a>线程基础</h3><p><font face="黑体" size="4">一个标准的线程由线程ID、当前指令指针PC，寄存器集合和堆栈组成，一个进程由多个线程组成，各个线程之间共享程序的内存空间。</font></p>
+<p>线程的访问权限</p>
+<table>
+<thead>
+<tr>
+<th align="left">线程私有</th>
+<th align="left">线程之间共享（进程所有）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">-局部变量<br>-函数的参数<br>-TLS数据</td>
+<td align="left">-全局变量<br>-堆上的数据<br>-函数里的静态变量<br>-程序代码<br>-打开的文件</td>
+</tr>
+</tbody></table>
+<p>过度优化：<br>举例一个并行编写但因为编译过程优化而造成的错误。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">x &#x3D; y &#x3D; 0;</span><br><span class="line">Thread 1   Thread 2</span><br><span class="line">x &#x3D; 1;     y &#x3D; 1;  </span><br><span class="line">r1 &#x3D; y;    r2 &#x3D; x;</span><br></pre></td></tr></table></figure>
+<p>r1和r2应该至少有一个为0，但有可能发生r1和r2都为0的情况，因为动态调度后会改变指令执行的次序，可以采用volatile关键字阻止过度优化（1）阻止编译器为了提高速度将变量缓存到寄存器内而不写回（2）阻止编译器调整指令顺序。<br></p>
+<h2 id="编译过程"><a href="#编译过程" class="headerlink" title="编译过程"></a>编译过程</h2><p><font face="黑体" size="4">GCC编译Hello World的过程，预处理-&gt;编译-&gt;汇编-&gt;链接<br><img src="/2020/07/14/%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5%E4%B8%8E%E8%A3%85%E8%BD%BD/1.jpg" alt="GCC编译Hello World的过程，预处理-&gt;编译-&gt;汇编-&gt;链接"><br>在C语言中，通常以.c文件保存变量和函数，这就像一个模块一样，但若干个模块需要相互之间的引用，相当于模块与模块之间进行通信，而通信方式有两种（1）函数调用（2）模块间变量的访问。但要能实现的话，需要知道函数和变量的地址，这就产生了一个中间过程：链接。<br><br>静态链接就是处理以上的过程，所以链接的主要内容是：<br>1 地址和空间分配<br>2 符号决议<br>3 重定位等<br></font></p>
+<h1 id="第二章-目标文件"><a href="#第二章-目标文件" class="headerlink" title="第二章 目标文件"></a>第二章 目标文件</h1><p><font face="黑体" size="4">编译器编译源码后生成的文件为目标文件，未经过链接，此章是了解其结构。<br><br><br>可执行文件格式在Win下是PE，在Linux下则为ELF，产生的中间文件分别为.obj和.o。<br>动态链接库DLL（Win—.dll  /  Linux—.so）<br>静态链接库（Win—.lib  /  Linux—.a）都是按照可执行文件格式存储。</font></p>
+<p>目标文件将信息按照不同属性以“节”的形式进行存储，也可以称为“段”。例如代码段.code/.txt放入需要执行的代码，数据段.data中放入数据。所以为了管理这些信息，需要在可执行的文件头设置一个段表，描述文件的属性，是否可执行、静态还是动态链接、入口地址等，还包含一个段表，包含各段的偏移信息和属性。</p>
+<p>一个简单的.c文件编译后形成机器代码，保存在.text段，全局变量和局部静态变量保存在.data段，未初始化的变量放入.bss段（为未初始化的全局变量和局部静态变量预留位置）。<br></p>
+<h2 id="举例"><a href="#举例" class="headerlink" title="举例"></a>举例</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">int printf(const char* format,...);</span><br><span class="line">int global_init_var &#x3D; 84;</span><br><span class="line">int global_uninit_var;</span><br><span class="line"></span><br><span class="line">void fun1(int i)</span><br><span class="line">&#123;</span><br><span class="line">	printf(&quot;%d\n&quot;,i);</span><br><span class="line">&#125;</span><br><span class="line">int main(void)</span><br><span class="line">&#123;</span><br><span class="line">	static int static_var &#x3D; 85;</span><br><span class="line">    static int static_var2;</span><br><span class="line">	int a &#x3D; 1;</span><br><span class="line">	int b;</span><br><span class="line"></span><br><span class="line">    fun1(static_var + static_var2 + a + b);</span><br><span class="line"></span><br><span class="line">	return a;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+      
+    </div>
+
+    
+    
+    
+<div>
+  
+</div>
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/05/26/%E3%80%8A%E6%B7%B1%E5%BA%A6%E6%8E%A2%E7%B4%A2C-%E5%AF%B9%E8%B1%A1%E6%A8%A1%E5%9E%8B%E3%80%8B%E7%AC%AC%E4%B8%80%E7%AB%A0/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -447,7 +745,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">2</span>
+          <span class="site-state-item-count">5</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
